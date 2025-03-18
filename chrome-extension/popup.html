@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DOM2Code</title>
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      width: 320px;
+      padding: 1rem;
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+
+    /* Shadcn-inspired components */
+    .card {
+      background-color: #ffffff;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+
+    .status-indicator.connected {
+      background-color: #22c55e;
+    }
+
+    .status-indicator.disconnected {
+      background-color: #ef4444;
+    }
+
+    .status-text {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 1px solid transparent;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .button-primary {
+      background-color: #0f172a;
+      color: white;
+    }
+
+    .button-primary:hover {
+      background-color: #1e293b;
+    }
+
+    .button-secondary {
+      background-color: white;
+      border-color: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .button-secondary:hover {
+      background-color: #f8fafc;
+    }
+
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .input {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      background-color: white;
+      color: #0f172a;
+      transition: border-color 0.2s;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: #0f172a;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .checkbox {
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    }
+
+    .checkbox:checked {
+      background-color: #0f172a;
+      border-color: #0f172a;
+    }
+
+    .success-message {
+      font-size: 0.875rem;
+      color: #22c55e;
+      margin-top: 0.5rem;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .success-message.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="title">DOM2Code</h1>
+    <div style="display: flex; align-items: center;">
+      <div id="statusIndicator" class="status-indicator disconnected"></div>
+      <span id="statusText" class="status-text">Disconnected</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <button id="connectButton" class="button button-primary">
+      Connect to Cursor
+    </button>
+    <button id="toggleButton" class="button button-secondary" disabled>
+      Enable Selection Mode
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="form-group">
+      <label class="label" for="highlightColor">Highlight Color</label>
+      <input type="color" id="highlightColor" class="input" value="#0f172a">
+    </div>
+
+    <div class="form-group">
+      <label class="label" for="serverPort">Server Port</label>
+      <input type="number" id="serverPort" class="input" value="54321">
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="autoFormat" class="checkbox" checked>
+      <label class="label" for="autoFormat" style="margin-bottom: 0">Auto-format HTML</label>
+    </div>
+
+    <button id="saveSettingsBtn" class="button button-primary">
+      Save Settings
+    </button>
+
+    <div id="successMessage" class="success-message">
+      Settings saved successfully!
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html> 

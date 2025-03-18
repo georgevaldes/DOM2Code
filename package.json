@@ -1,0 +1,127 @@
+{
+  "name": "dom2code",
+  "displayName": "DOM2Code",
+  "description": "Select HTML elements from a webview and inject them into your editor",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/DOM2Code.git"
+  },
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dom2code.openSelector",
+        "title": "DOM2Code: Open Element Selector"
+      },
+      {
+        "command": "dom2code.openWithUrl",
+        "title": "DOM2Code: Open With Localhost URL"
+      },
+      {
+        "command": "dom2code.openDirectView",
+        "title": "DOM2Code: Open URL Direct View (Troubleshooting)"
+      },
+      {
+        "command": "dom2code.openInBrowser",
+        "title": "DOM2Code: Open URL in System Browser"
+      },
+      {
+        "command": "dom2code.openChromeDevTools",
+        "title": "DOM2Code: Open Chrome with DevTools for HTML Copying"
+      },
+      {
+        "command": "dom2code.toggleServer",
+        "title": "DOM2Code: Toggle Chrome Connection"
+      },
+      {
+        "command": "dom2code.inspectCommands",
+        "title": "DOM2Code: Inspect Chat Commands (Debug)"
+      },
+      {
+        "command": "dom2code.installChromeExtension",
+        "title": "DOM2Code: Install Chrome Extension"
+      },
+      {
+        "command": "dom2code.inspectCursorChat",
+        "title": "DOM2Code: Inspect Cursor Chat Input (Debug)"
+      }
+    ],
+    "configuration": {
+      "title": "DOM2Code",
+      "properties": {
+        "dom2code.defaultLocalhostUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "Default localhost URL to open when using the localhost viewer"
+        },
+        "dom2code.htmlFormatting": {
+          "type": "string",
+          "enum": [
+            "pretty",
+            "minified",
+            "raw"
+          ],
+          "default": "pretty",
+          "description": "HTML formatting style for injected code"
+        },
+        "dom2code.selectionHighlightColor": {
+          "type": "string",
+          "default": "#007bff",
+          "description": "Color used for highlighting selected elements"
+        },
+        "dom2code.portMappings": {
+          "type": "array",
+          "default": [
+            {
+              "webviewPort": 3000,
+              "extensionHostPort": 3000
+            },
+            {
+              "webviewPort": 8080,
+              "extensionHostPort": 8080
+            }
+          ],
+          "description": "Port mappings for localhost connections"
+        },
+        "dom2code.serverPort": {
+          "type": "number",
+          "default": 54321,
+          "description": "Port for Chrome extension WebSocket communication"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "dependencies": {
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0",
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "14.x",
+    "@types/ws": "^8.5.4",
+    "eslint": "^7.27.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "glob": "^7.1.7",
+    "mocha": "^8.4.0",
+    "typescript": "^4.3.2",
+    "vscode-test": "^1.5.2"
+  }
+}

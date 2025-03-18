@@ -1,0 +1,28 @@
+/* DOM2Code Content Script Styles */
+
+#dom2code-highlight-overlay {
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.dom2code-notification {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Style overrides for selection markers */
+.dom2code-element-info {
+  position: absolute;
+  background-color: #333;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 999999;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+} 

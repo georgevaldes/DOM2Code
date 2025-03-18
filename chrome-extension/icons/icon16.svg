@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <rect width="16" height="16" rx="2" fill="#4285F4"/>
+  <circle cx="8" cy="8" r="6" fill="white"/>
+  <text x="8" y="11" font-family="Arial" font-size="8" font-weight="bold" text-anchor="middle" fill="#4285F4">D2C</text>
+</svg> 
