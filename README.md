@@ -71,6 +71,9 @@ This extension contributes the following settings:
 
 - Some websites block iframe access for security reasons, which may prevent the localhost viewer from working properly
 - Complex HTML structures may not always format perfectly in the injected code
+- Current workflow requires multiple clicks between browser and editor - we're working on streamlining this process
+- Success confirmations for element selection and code injection could be more visible and informative
+- Chrome extension interface could benefit from improved visual feedback and more intuitive controls
 
 ## Troubleshooting
 
