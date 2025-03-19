@@ -2,6 +2,11 @@
 
 DOM2Code is a Visual Studio Code extension that allows developers to select HTML elements from a rendered webpage and inject the corresponding HTML markup into their active editor. This creates a seamless bridge between visual UI elements and their code representation.
 
+[DOM2Code Demo - Watch Video](https://www.loom.com/share/9374d2920d374302867fc49eeb2775d7)
+
+[![Watch Video](https://cdn.loom.com/sessions/thumbnails/9374d2920d374302867fc49eeb2775d7-85c0c94025a366ed-full-play.gif)](https://www.loom.com/share/9374d2920d374302867fc49eeb2775d7)
+
+
 ## Features
 
 - **Static HTML Selection**: Choose from a gallery of pre-defined HTML components
