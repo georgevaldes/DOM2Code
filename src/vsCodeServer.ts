@@ -296,7 +296,7 @@ export class VSCodeServer {
       // Step 3: Copy content to clipboard
       // Check if content is already markdown-formatted
       const isMarkdownFormatted = html.includes('```html') && html.includes('```');
-      const content = isMarkdownFormatted ? html : `Use the previous instructions and apply them to the following component: \`\`\`html\n${html}\n\`\`\``;
+      const content = isMarkdownFormatted ? html : `Provide a tech spec first. Use the previous instructions and apply them to the following component. Find the component in the following HTML: \`\`\`html\n${html}\n\`\`\``;
       
       outputChannel.appendLine('Step 3: Copying content to clipboard');
       await vscode.env.clipboard.writeText(content);

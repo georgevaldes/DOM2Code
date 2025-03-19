@@ -21,14 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Update connection status UI
   function updateConnectionStatus() {
     statusIndicator.className = isConnected ? "status-indicator connected" : "status-indicator disconnected";
-    statusText.textContent = isConnected ? "Connected to Cursor" : "Disconnected from Cursor";
-    connectButton.textContent = isConnected ? "Disconnect from Cursor" : "Connect to Cursor";
+    statusText.textContent = isConnected ? "Connected" : "Disconnected";
+    connectButton.textContent = isConnected ? "Disconnect" : "Connect";
     connectButton.className = isConnected ? "button button-primary disconnect" : "button button-primary connect";
     toggleButton.disabled = !isConnected;
     
-    // Show connection status in title
+    // Keep title fixed as "DOM2Code" regardless of connection status
     const title = document.querySelector('.title');
-    title.textContent = isConnected ? "DOM2Code (Connected)" : "DOM2Code (Disconnected)";
+    title.textContent = "DOM2Code";
   }
   
   // Update toggle button state
@@ -156,8 +156,11 @@ function showError(message) {
   document.body.appendChild(errorDiv);
   
   setTimeout(() => {
-    errorDiv.remove();
-  }, 3000);
+    errorDiv.classList.add('fade-out');
+    setTimeout(() => {
+      errorDiv.remove();
+    }, 300);
+  }, 2700);
 }
 
 function showSuccess(message) {
@@ -167,6 +170,9 @@ function showSuccess(message) {
   document.body.appendChild(successDiv);
   
   setTimeout(() => {
-    successDiv.remove();
-  }, 3000);
+    successDiv.classList.add('fade-out');
+    setTimeout(() => {
+      successDiv.remove();
+    }, 300);
+  }, 2700);
 } 

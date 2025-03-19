@@ -209,7 +209,7 @@ function showContextMenu(element, x, y) {
           command: 'sendToCursor',
           data: {
             command: 'editor.action.clipboardPasteAction',
-            text: `${command}\nPlease apply the previous instructions to the following component: \`\`\`html\n${state.selectedElement.outerHTML}\n\`\`\``,
+            text: `${command}\nProvide a tech spec first. Use the previous instructions and apply them to the following component. Find the component in the following HTML: \`\`\`html\n${state.selectedElement.outerHTML}\n\`\`\``,
             metadata: elementData,
             shouldWait: false
           }
