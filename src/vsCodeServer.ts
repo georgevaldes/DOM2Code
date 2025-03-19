@@ -278,20 +278,26 @@ export class VSCodeServer {
       outputChannel.appendLine('Waiting for chat to initialize...');
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Step 2: Focus chat pane
-      outputChannel.appendLine('Step 2: Focusing chat pane');
-      const focusSuccess = await this.executeCommandWithRetry('aichat.focuschatpaneaction');
-      if (!focusSuccess) {
-        outputChannel.appendLine('❌ Failed to focus chat pane after multiple attempts');
-        return false;
-      }
+      // Step 2: Ensure proper focus sequence
+      outputChannel.appendLine('Step 2: Ensuring proper focus sequence');
       
-      // Wait for focus to take effect
-      outputChannel.appendLine('Waiting for focus to take effect...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // First, show the chat panel if it's not visible
+      await this.executeCommandWithRetry('workbench.action.togglePanel');
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Step 3: Copy content to clipboard (only the HTML)
-      const content = `\`\`\`html\n${html}\n\`\`\``;
+      // Then focus the panel area
+      await this.executeCommandWithRetry('workbench.action.focusPanel');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Finally, focus the chat input specifically
+      await this.executeCommandWithRetry('aichat.newfollowupaction');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Step 3: Copy content to clipboard
+      // Check if content is already markdown-formatted
+      const isMarkdownFormatted = html.includes('```html') && html.includes('```');
+      const content = isMarkdownFormatted ? html : `Use the previous instructions and apply them to the following component: \`\`\`html\n${html}\n\`\`\``;
+      
       outputChannel.appendLine('Step 3: Copying content to clipboard');
       await vscode.env.clipboard.writeText(content);
       outputChannel.appendLine('✅ Content copied to clipboard');
@@ -299,16 +305,13 @@ export class VSCodeServer {
       // Step 4: Try to insert content using clipboard paste
       outputChannel.appendLine('Step 4: Pasting content from clipboard');
       
-      // Try to ensure we're in the chat context
-      outputChannel.appendLine('Ensuring chat context...');
-      await this.executeCommandWithRetry('workbench.action.focusPanel');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await this.executeCommandWithRetry('aichat.focuschatpaneaction');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Log the active editor for debugging
+      // Verify we're still in the chat context
       const activeEditor = vscode.window.activeTextEditor;
-      outputChannel.appendLine(`Active editor: ${activeEditor?.document.uri.scheme} - ${activeEditor?.document.fileName}`);
+      if (activeEditor?.document.uri.scheme === 'output') {
+        outputChannel.appendLine('Re-focusing chat pane...');
+        await this.executeCommandWithRetry('aichat.newfollowupaction');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
       
       const pasteSuccess = await this.executeCommandWithRetry('editor.action.clipboardPasteAction');
       if (!pasteSuccess) {

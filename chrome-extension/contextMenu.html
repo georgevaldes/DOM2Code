@@ -65,29 +65,7 @@
       border-top: 1px solid rgb(39, 39, 42);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-    }
-    
-    .mode {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .mode-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: rgb(161, 161, 170);
-      font-size: 14px;
-    }
-    
-    .mode-separator {
-      color: rgb(82, 82, 91);
-    }
-    
-    .mode-inactive {
-      color: rgb(113, 113, 122);
+      justify-content: flex-end;
     }
     
     .submit-btn {
@@ -144,36 +122,17 @@
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <button class="add-context">
-        <span style="font-size: 12px">+</span>
-        Add context
-      </button>
-    </div>
-    
     <div class="input-container">
       <input
         type="text"
         class="input"
         id="commandInput"
-        placeholder="Edit process (⌘), @ to mention, ↑ to select"
+        placeholder="Suggest edit here"
         autofocus
       />
     </div>
     
     <div class="footer">
-      <div class="mode">
-        <span class="mode-item">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
-          </svg>
-          normal
-        </span>
-        <span class="mode-separator">/</span>
-        <span class="mode-item mode-inactive">agent</span>
-      </div>
-      
       <button class="submit-btn" id="submitBtn">
         submit →
       </button>

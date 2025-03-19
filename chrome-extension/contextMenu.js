@@ -1,7 +1,6 @@
 // Get UI elements
 const commandInput = document.getElementById('commandInput');
 const submitBtn = document.getElementById('submitBtn');
-const addContextBtn = document.querySelector('.add-context');
 
 let position = { x: 0, y: 0 };
 let selectedElement = null;

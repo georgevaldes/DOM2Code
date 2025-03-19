@@ -3,6 +3,7 @@
 // State management
 const state = {
   isSelectionModeActive: false,
+  isConnected: false,
   highlightColor: "#0f172a",
   hoveredElement: null,
   selectedElement: null,
@@ -53,36 +54,17 @@ function createContextMenu() {
   contextMenu.className = 'dom2code-context-menu';
   contextMenu.innerHTML = `
     <div class="container">
-      <div class="header">
-        <button class="add-context">
-          <span style="font-size: 12px">+</span>
-          Add context
-        </button>
-      </div>
-      
       <div class="input-container">
         <input
           type="text"
           class="input"
           id="commandInput"
-          placeholder="Edit process (⌘), @ to mention, ↑ to select"
+          placeholder="Suggest edit here"
           autofocus
         />
       </div>
       
       <div class="footer">
-        <div class="mode">
-          <span class="mode-item">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/>
-              <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            normal
-          </span>
-          <span class="mode-separator">/</span>
-          <span class="mode-item mode-inactive">agent</span>
-        </div>
-        
         <button class="submit-btn" id="submitBtn">
           submit →
         </button>
@@ -108,27 +90,6 @@ function createContextMenu() {
       font-size: 14px;
     }
     
-    .dom2code-context-menu .header {
-      padding: 8px 12px;
-      border-bottom: 1px solid rgb(39, 39, 42);
-    }
-    
-    .dom2code-context-menu .add-context {
-      background: none;
-      border: none;
-      color: rgb(161, 161, 170);
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      padding: 0;
-    }
-    
-    .dom2code-context-menu .add-context:hover {
-      color: rgb(212, 212, 216);
-    }
-    
     .dom2code-context-menu .input-container {
       padding: 12px;
     }
@@ -151,29 +112,7 @@ function createContextMenu() {
       border-top: 1px solid rgb(39, 39, 42);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-    }
-    
-    .dom2code-context-menu .mode {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .dom2code-context-menu .mode-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: rgb(161, 161, 170);
-      font-size: 14px;
-    }
-    
-    .dom2code-context-menu .mode-separator {
-      color: rgb(82, 82, 91);
-    }
-    
-    .dom2code-context-menu .mode-inactive {
-      color: rgb(113, 113, 122);
+      justify-content: flex-end;
     }
     
     .dom2code-context-menu .submit-btn {
@@ -235,140 +174,76 @@ function showContextMenu(element, x, y) {
   // Setup event listeners
   const input = contextMenu.querySelector('#commandInput');
   const submitBtn = contextMenu.querySelector('#submitBtn');
-  const addContextBtn = contextMenu.querySelector('.add-context');
   
   input.focus();
   
-  function handleSubmit() {
+  // Flag to prevent duplicate submissions
+  let isSubmitting = false;
+  
+  async function handleSubmit() {
     const command = input.value.trim();
-    if (!command) return;
+    if (!command || isSubmitting) return;
     
-    // Get element metadata
-    const elementData = {
-      tagName: state.selectedElement.tagName.toLowerCase(),
-      id: state.selectedElement.id,
-      classes: Array.from(state.selectedElement.classList),
-      attributes: Array.from(state.selectedElement.attributes).map(attr => ({
-        name: attr.name,
-        value: attr.value
-      })),
-      html: state.selectedElement.outerHTML,
-      text: state.selectedElement.textContent.trim(),
-      rect: state.selectedElement.getBoundingClientRect().toJSON()
-    };
+    try {
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      input.disabled = true;
+      
+      // Get element metadata
+      const elementData = {
+        tagName: state.selectedElement.tagName.toLowerCase(),
+        id: state.selectedElement.id,
+        classes: Array.from(state.selectedElement.classList),
+        attributes: Array.from(state.selectedElement.attributes).map(attr => ({
+          name: attr.name,
+          value: attr.value
+        })),
+        html: state.selectedElement.outerHTML,
+        text: state.selectedElement.textContent.trim(),
+        rect: state.selectedElement.getBoundingClientRect().toJSON()
+      };
 
-    // Try different commands in sequence
-    const commandsToTry = [
-      {
-        // Step 1: Create new chat
-        command: 'aichat.newchataction',
-        text: '',  // No text for new chat command
-        shouldWait: true,  // Wait after this command
-        waitTime: 500  // Longer wait for chat creation
-      },
-      {
-        // Step 2: Focus chat panel
-        command: 'aichat.focuschatpaneaction',
-        text: '',  // No text for focus command
-        shouldWait: true,  // Wait after this command
-        waitTime: 300  // Wait for focus to complete
-      },
-      {
-        // Step 3: Insert/paste content using proper editor command
-        command: 'editor.action.clipboardPasteAction',
-        text: `${command}\n\`\`\`html\n${state.selectedElement.outerHTML}\n\`\`\``,
-        shouldWait: false  // No need to wait after paste
-      }
-    ];
-
-    let currentCommandIndex = 0;
-
-    function tryNextCommand() {
-      if (currentCommandIndex >= commandsToTry.length) {
-        showNotification('Failed to send to Cursor: All commands failed', true);
-        return;
-      }
-
-      const currentCommand = commandsToTry[currentCommandIndex];
-      console.log('Trying command:', currentCommand);
-
-      chrome.runtime.sendMessage({
-        command: 'sendToCursor',
-        data: {
-          command: currentCommand.command,
-          text: currentCommand.text,
-          metadata: elementData,
-          shouldWait: currentCommand.shouldWait
-        }
-      }, (response) => {
-        if (response && response.success) {
-          if (currentCommand.shouldWait) {
-            // Use command-specific wait time or default
-            const waitTime = currentCommand.waitTime || 200;
-            setTimeout(() => {
-              currentCommandIndex++;
-              tryNextCommand();
-            }, waitTime);
-          } else {
-            showNotification(`Successfully sent to Cursor`);
-            hideContextMenu();
+      // Send only one command with all the data
+      const response = await new Promise(resolve => {
+        chrome.runtime.sendMessage({
+          command: 'sendToCursor',
+          data: {
+            command: 'editor.action.clipboardPasteAction',
+            text: `${command}\nPlease apply the previous instructions to the following component: \`\`\`html\n${state.selectedElement.outerHTML}\n\`\`\``,
+            metadata: elementData,
+            shouldWait: false
           }
-        } else {
-          const errorMessage = response?.error || 'Unknown error';
-          console.log(`Command failed: ${currentCommand.command} - ${errorMessage}`);
-          
-          // If this is the last command, show the error
-          if (currentCommandIndex === commandsToTry.length - 1) {
-            showNotification(`Failed to send to Cursor: ${errorMessage}`, true);
-          } else {
-            // Try the next command
-            currentCommandIndex++;
-            tryNextCommand();
-          }
-        }
+        }, resolve);
       });
-    }
 
-    // Start trying commands
-    tryNextCommand();
+      if (response && response.success) {
+        showNotification('Successfully sent to Cursor');
+        setTimeout(() => hideContextMenu(), 1000);
+      } else {
+        showNotification('Failed to send to Cursor', true);
+        submitBtn.disabled = false;
+        input.disabled = false;
+      }
+    } catch (error) {
+      console.error('Error sending to Cursor:', error);
+      showNotification('Failed to send to Cursor', true);
+      submitBtn.disabled = false;
+      input.disabled = false;
+    } finally {
+      isSubmitting = false;
+    }
   }
   
-  function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+  // Handle Enter key
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
       handleSubmit();
-    } else if (e.key === 'Escape') {
-      hideContextMenu();
-    } else if (e.key === '@') {
-      // TODO: Handle mentions
     }
-  }
+  });
   
-  function handleAddContext() {
-    // Remove the unnecessary command and replace with a notification
-    showNotification('This feature is not currently supported', true);
-  }
-  
-  input.addEventListener('keydown', handleKeyDown);
+  // Handle submit button click
   submitBtn.addEventListener('click', handleSubmit);
-  addContextBtn.addEventListener('click', handleAddContext);
-  
-  // Handle click outside
-  function handleClickOutside(e) {
-    if (!contextMenu.contains(e.target)) {
-      hideContextMenu();
-    }
-  }
-  
-  document.addEventListener('mousedown', handleClickOutside);
-  
-  // Store cleanup function
-  contextMenu.cleanup = () => {
-    input.removeEventListener('keydown', handleKeyDown);
-    submitBtn.removeEventListener('click', handleSubmit);
-    addContextBtn.removeEventListener('click', handleAddContext);
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
 }
 
 // Hide context menu
@@ -393,19 +268,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       hideContextMenu();
     }
     showNotification(state.isSelectionModeActive ? 'Selection mode enabled' : 'Selection mode disabled');
+  } else if (message.command === 'connectionStateChanged') {
+    state.isConnected = message.isConnected;
+    if (!state.isConnected) {
+      // Disable selection mode and clean up UI
+      state.isSelectionModeActive = false;
+      removeHighlight();
+      hideContextMenu();
+      showNotification('Connection lost. Selection mode disabled.', true);
+    }
   } else if (message.command === 'getElementAtPoint') {
+    if (!state.isConnected) {
+      showNotification('Please connect to Cursor first', true);
+      return;
+    }
     const element = document.elementFromPoint(state.lastMouseX, state.lastMouseY);
     if (element && !isElementExcluded(element)) {
       showContextMenu(element, state.lastMouseX, state.lastMouseY);
     }
   } else if (message.command === 'showNotification') {
     showNotification(message.message, message.isError);
+  } else if (message.command === 'commandResult') {
+    const { success, error, command } = message.data;
+    if (success) {
+      showNotification('Successfully sent to Cursor');
+      setTimeout(() => hideContextMenu(), 1000);
+    } else {
+      showNotification(error || 'Failed to send to Cursor', true);
+    }
   }
 });
 
 // Handle mouse movement
 function handleMouseMove(e) {
-  if (!state.isSelectionModeActive) return;
+  if (!state.isSelectionModeActive || !state.isConnected) return;
   
   // Don't process if we're interacting with our own UI
   if (e.target.closest('.dom2code-context-menu') || e.target.classList.contains('dom2code-notification')) {
@@ -432,7 +328,7 @@ function handleMouseMove(e) {
 
 // Handle element click
 function handleClick(e) {
-  if (!state.isSelectionModeActive) return;
+  if (!state.isSelectionModeActive || !state.isConnected) return;
   
   // Don't process if we're interacting with our own UI
   if (e.target.closest('.dom2code-context-menu') || e.target.classList.contains('dom2code-notification')) {
@@ -458,8 +354,8 @@ function setupEventListeners() {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("click", handleClick, true);
     
-    // Setup cleanup on extension unload
-    chrome.runtime.onSuspend.addListener(cleanup);
+    // Listen for extension unload
+    window.addEventListener('unload', cleanup);
   } catch (error) {
     console.error('Error setting up event listeners:', error);
     handleError(error);
@@ -468,9 +364,12 @@ function setupEventListeners() {
 
 function cleanup() {
   try {
+    // Remove event listeners
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("click", handleClick, true);
+    window.removeEventListener('unload', cleanup);
     
+    // Clean up UI elements
     if (tooltip && tooltip.parentNode) {
       tooltip.parentNode.removeChild(tooltip);
       tooltip = null;
@@ -614,44 +513,59 @@ function handleError(error) {
   }
 }
 
-// Show notification
-function showNotification(message, isError = false) {
+// Show notification with improved styling and timing
+function showNotification(message, isError = false, duration = 3000) {
+  // Remove any existing notification
+  const existingNotification = document.querySelector('.dom2code-notification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  // Create notification element
   const notification = document.createElement('div');
-  notification.className = 'dom2code-notification';
-  notification.textContent = message;
+  notification.className = `dom2code-notification ${isError ? 'error' : 'success'}`;
   notification.style.cssText = `
     position: fixed;
     bottom: 20px;
     right: 20px;
-    padding: 10px 15px;
-    background-color: ${isError ? '#ef4444' : '#22c55e'};
+    padding: 12px 20px;
+    background: ${isError ? '#ef4444' : '#22c55e'};
     color: white;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     z-index: 2147483647;
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.3s, transform 0.3s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
   `;
+  
+  // Add icon
+  const icon = document.createElement('span');
+  icon.style.marginRight = '8px';
+  icon.innerHTML = isError ? '❌' : '✅';
+  notification.appendChild(icon);
+  
+  // Add message
+  const text = document.createElement('span');
+  text.textContent = message;
+  notification.appendChild(text);
   
   document.body.appendChild(notification);
   
+  // Trigger animation
   requestAnimationFrame(() => {
     notification.style.opacity = '1';
     notification.style.transform = 'translateY(0)';
   });
   
+  // Remove after duration
   setTimeout(() => {
     notification.style.opacity = '0';
     notification.style.transform = 'translateY(20px)';
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
-    }, 300);
-  }, 3000);
+    setTimeout(() => notification.remove(), 300);
+  }, duration);
 }
 
 // Initialize
@@ -669,13 +583,21 @@ function initialize() {
       
       console.log('Initial state:', response);
       
-      if (response && response.isSelectionModeActive) {
-        state.isSelectionModeActive = true;
-        showNotification('Selection mode enabled');
-      }
-      
-      if (response && response.settings && response.settings.highlightColor) {
-        state.highlightColor = response.settings.highlightColor;
+      if (response) {
+        state.isConnected = response.isConnected;
+        state.isSelectionModeActive = response.isSelectionModeActive;
+        
+        if (state.isSelectionModeActive && !state.isConnected) {
+          // If selection mode is active but we're not connected, disable it
+          state.isSelectionModeActive = false;
+          showNotification('Connection lost. Selection mode disabled.', true);
+        } else if (state.isSelectionModeActive) {
+          showNotification('Selection mode enabled');
+        }
+        
+        if (response.settings && response.settings.highlightColor) {
+          state.highlightColor = response.settings.highlightColor;
+        }
       }
     });
   } catch (error) {

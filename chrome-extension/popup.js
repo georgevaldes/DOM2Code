@@ -20,23 +20,29 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Update connection status UI
   function updateConnectionStatus() {
-    statusIndicator.className = isConnected ? "status-indicator connected" : "status-indicator";
+    statusIndicator.className = isConnected ? "status-indicator connected" : "status-indicator disconnected";
+    statusText.textContent = isConnected ? "Connected to Cursor" : "Disconnected from Cursor";
     connectButton.textContent = isConnected ? "Disconnect from Cursor" : "Connect to Cursor";
-    connectButton.className = isConnected ? "button disconnect" : "button connect";
+    connectButton.className = isConnected ? "button button-primary disconnect" : "button button-primary connect";
     toggleButton.disabled = !isConnected;
+    
+    // Show connection status in title
+    const title = document.querySelector('.title');
+    title.textContent = isConnected ? "DOM2Code (Connected)" : "DOM2Code (Disconnected)";
   }
   
   // Update toggle button state
   function updateToggleButton() {
     if (!isConnected) {
       toggleButton.disabled = true;
-      toggleButton.className = "button disabled";
+      toggleButton.className = "button button-secondary disabled";
       isSelectionModeActive = false;
+      toggleButton.textContent = "Enable Selection Mode";
     } else {
       toggleButton.disabled = false;
-      toggleButton.className = isSelectionModeActive ? "button active" : "button";
+      toggleButton.className = isSelectionModeActive ? "button button-secondary active" : "button button-secondary";
+      toggleButton.textContent = isSelectionModeActive ? "Disable Selection Mode" : "Enable Selection Mode";
     }
-    toggleButton.textContent = isSelectionModeActive ? "Disable Selection Mode" : "Enable Selection Mode";
   }
   
   // Load current state
@@ -64,6 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
           isConnected = false;
           isSelectionModeActive = false;
           updateUI();
+          showSuccess('Disconnected from Cursor');
+        } else {
+          showError('Failed to disconnect from Cursor');
         }
       });
     } else {
@@ -72,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (response.success) {
           isConnected = true;
           updateUI();
+          showSuccess('Connected to Cursor');
         } else {
           showError('Failed to connect to Cursor');
         }
@@ -144,7 +154,10 @@ function showError(message) {
   errorDiv.className = 'error-message';
   errorDiv.textContent = message;
   document.body.appendChild(errorDiv);
-  setTimeout(() => errorDiv.remove(), 3000);
+  
+  setTimeout(() => {
+    errorDiv.remove();
+  }, 3000);
 }
 
 function showSuccess(message) {
@@ -152,5 +165,8 @@ function showSuccess(message) {
   successDiv.className = 'success-message';
   successDiv.textContent = message;
   document.body.appendChild(successDiv);
-  setTimeout(() => successDiv.remove(), 3000);
+  
+  setTimeout(() => {
+    successDiv.remove();
+  }, 3000);
 } 

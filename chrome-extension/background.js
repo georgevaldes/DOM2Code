@@ -76,6 +76,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// Disable selection mode
+function disableSelectionMode() {
+  isSelectionModeActive = false;
+  // Notify all tabs
+  notifyAllTabs({
+    command: 'toggleSelectionMode',
+    value: false
+  });
+  notifyStateChange();
+}
+
 // Connect to VS Code WebSocket server
 async function connectToVSCode() {
   // Close existing connection if any
@@ -102,6 +113,11 @@ async function connectToVSCode() {
         ws = null;
         // Disable selection mode when connection is lost
         disableSelectionMode();
+        // Notify all tabs about disconnection
+        notifyAllTabs({
+          command: 'connectionStateChanged',
+          isConnected: false
+        });
         notifyStateChange();
         resolve(false);
       };
@@ -112,6 +128,11 @@ async function connectToVSCode() {
         ws = null;
         // Disable selection mode on error
         disableSelectionMode();
+        // Notify all tabs about disconnection
+        notifyAllTabs({
+          command: 'connectionStateChanged',
+          isConnected: false
+        });
         notifyStateChange();
         resolve(false);
       };
@@ -121,6 +142,11 @@ async function connectToVSCode() {
       ws = null;
       // Disable selection mode on error
       disableSelectionMode();
+      // Notify all tabs about disconnection
+      notifyAllTabs({
+        command: 'connectionStateChanged',
+        isConnected: false
+      });
       notifyStateChange();
       resolve(false);
     }
@@ -134,19 +160,14 @@ function disconnectFromVSCode() {
     ws = null;
   }
   isConnected = false;
+  // Disable selection mode when disconnecting
+  disableSelectionMode();
+  // Notify all tabs about disconnection
+  notifyAllTabs({
+    command: 'connectionStateChanged',
+    isConnected: false
+  });
   notifyStateChange();
-}
-
-// Disable selection mode and notify all tabs
-function disableSelectionMode() {
-  if (isSelectionModeActive) {
-    isSelectionModeActive = false;
-    notifyAllTabs({
-      command: 'toggleSelectionMode',
-      value: false
-    });
-    notifyStateChange();
-  }
 }
 
 // Notify all tabs about a state change
@@ -228,11 +249,18 @@ async function sendToCursor(data) {
               resolve({ 
                 success: response.success, 
                 error: response.error,
-                command: data.command
+                command: data.command,
+                timestamp: Date.now()
               });
             }
           } catch (error) {
             console.error('Error parsing WebSocket response:', error);
+            resolve({ 
+              success: false, 
+              error: 'Invalid response from Cursor',
+              command: data.command,
+              timestamp: Date.now()
+            });
           }
         };
         ws.addEventListener('message', messageHandler);
@@ -240,8 +268,9 @@ async function sendToCursor(data) {
       new Promise((resolve) => 
         setTimeout(() => resolve({ 
           success: false, 
-          error: 'Command timed out',
-          command: data.command
+          error: 'Command timed out after 5 seconds',
+          command: data.command,
+          timestamp: Date.now()
         }), 5000)
       )
     ]);
@@ -250,12 +279,32 @@ async function sendToCursor(data) {
     console.log('Command response:', {
       command: data.command,
       success: response.success,
-      error: response.error
+      error: response.error,
+      timestamp: response.timestamp
+    });
+
+    // Notify all tabs about the command result
+    notifyAllTabs({
+      command: 'commandResult',
+      data: response
     });
 
     return response;
   } catch (error) {
     console.error('Error sending to Cursor:', error);
-    return { success: false, error: error.message };
+    const errorResponse = { 
+      success: false, 
+      error: error.message,
+      command: data.command,
+      timestamp: Date.now()
+    };
+    
+    // Notify all tabs about the error
+    notifyAllTabs({
+      command: 'commandResult',
+      data: errorResponse
+    });
+    
+    return errorResponse;
   }
 } 
